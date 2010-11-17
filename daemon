@@ -1,0 +1,113 @@
+#!/bin/bash
+# This script manipulates services on Archlinux
+# Author: Ben Morgan <benm.morgan@gmail.com>
+# Version: 1.5 (28th September 2010)
+
+version () {
+    echo "daemon version 1.5 (28th September 2010)"
+}
+
+help () {
+    echo "daemon manipulates services (daemons)"
+    echo "on Arch Linux: start, stop and restart"
+    echo ""
+    echo "Usage: daemon [-s|-t|-r] <daemon>"
+    echo "If no flag is specified, -s is assumed"
+    echo "  --list         -l   list started daemons"
+    echo "  --available    -a   list all available daemons"
+    echo "  --start        -s   start"
+    echo "  --stop         -t   stop"
+    echo "  --restart      -r   restart"
+    echo "  --stop-start   -ts  stop and then start"
+    echo "  --help         -h   display this help"
+    echo "  --version      -v   display the version"
+    echo "  --quit-on-fail -q   quit when a services does not exist"
+    echo "                      or when a service quits with an error"
+    echo ""
+}
+
+list () {
+    echo "Currently running daemons:"
+    ls -1 /var/run/daemons | xargs -I daemon echo "  daemon"
+}
+
+available () {
+    echo "All available daemons:"
+    ls --color=auto /etc/rc.d
+    #ls -1 /etc/rc.d | xargs -I daemon echo "  daemon"
+}
+
+run () {
+    # basename the service to prevent running other applications
+    # (so you can't run a service ../../home/someuser/bad-app.sh)
+    service=$(basename $1)  # the service (e.g. cups)
+    cmd=$2       # the command (start, stop, restart)
+    
+    if [ ! -f /etc/rc.d/$service ]; then
+        echo "daemon '$service' does not exist!"
+        if [ "$quitonfail" == "1" ]; then
+            exit 2
+        fi
+        return 2
+    fi
+    
+    # Make sure that we are root
+    if [ "$(id -u)" != "0" ]; then
+	    echo "root access required."
+	    exit 1
+    fi
+
+    /etc/rc.d/$service $cmd
+
+    if [ "$quitonfail" == "1" ]; then
+        if [ "$?" != "0" ]; then
+            exit 2
+        fi
+    fi
+}
+
+runall () {
+    array=$1  # the array of services
+    cmd=$2    # the command to be executed
+    
+    if [ "$cmd" == "stopstart" ]; then
+        runall $array "stop";
+        runall $array "start";
+    else
+        for service in ${array[@]}; do
+            run $service $cmd
+        done
+    fi 
+}
+
+
+
+# Parse the arguments and compile a command
+quitonfail=0;
+if [ $# -gt 0 ]; then
+    count=0;
+    array=();
+    cmd="start"; # default if no flag specified
+    for arg in $@; do
+        case $arg in
+            -a|--available ) available; exit 0;;
+            -l|--list      ) list; exit 0;;
+            -h|--help      ) help; exit 0;;
+            -v|--version   ) version; exit 0;;
+            -s|--start     ) cmd="start";;
+            -t|--stop      ) cmd="stop";;
+            -r|--restart   ) cmd="restart";;
+           -ts|--stop-start) cmd="stopstart";;
+            -q|--quit-on-fail) quitonfail=1;;
+             *             ) array[$count]=$arg; count=$count+1;;
+        esac
+    done
+    runall $array $cmd
+    exit $?
+else
+    help
+    exit 1
+fi
+
+exit 128
+
