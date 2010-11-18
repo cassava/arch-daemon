@@ -1,6 +1,7 @@
 #!/bin/bash
+# daemon
 # This script manipulates services on Archlinux
-# Author: Ben Morgan <benm.morgan@gmail.com>
+# Author: Ben Morgan <uv.sound@gmail.com>
 # Version: 1.5 (28th September 2010)
 
 version () {
