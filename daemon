@@ -2,13 +2,12 @@
 # daemon
 # This script manipulates services on Archlinux
 # Author: Ben Morgan <uv.sound@gmail.com>
-# Version: 1.5 (28th September 2010)
 
-version () {
-    echo "daemon version 1.5 (28th September 2010)"
+function version () {
+    echo "daemon version 1.6 (28th September 2010)"
 }
 
-help () {
+function help () {
     echo "daemon manipulates services (daemons)"
     echo "on Arch Linux: start, stop and restart"
     echo ""
@@ -27,18 +26,18 @@ help () {
     echo ""
 }
 
-list () {
+function list () {
     echo "Currently running daemons:"
     ls -1 /var/run/daemons | xargs -I daemon echo "  daemon"
 }
 
-available () {
+function available () {
     echo "All available daemons:"
     ls --color=auto /etc/rc.d
     #ls -1 /etc/rc.d | xargs -I daemon echo "  daemon"
 }
 
-run () {
+function run () {
     # basename the service to prevent running other applications
     # (so you can't run a service ../../home/someuser/bad-app.sh)
     service=$(basename $1)  # the service (e.g. cups)
@@ -67,7 +66,7 @@ run () {
     fi
 }
 
-runall () {
+function runall () {
     array=$1  # the array of services
     cmd=$2    # the command to be executed
     

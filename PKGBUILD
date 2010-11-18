@@ -1,6 +1,6 @@
 # Contributor: Ben Morgan <benm.morgan@gmail.com>
 pkgname=arch-daemon
-pkgver=1.5
+pkgver=1.6
 pkgrel=1
 pkgdesc="arch-daemon manipulates services or daemons on Arch Linux"
 arch=('any')
