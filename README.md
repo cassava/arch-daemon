@@ -20,7 +20,7 @@ did it above.
 
 
 ### Usage (taken from `daemon --help`)
-    Usage: daemon [-s|-t|-r] <daemons>
+    Usage: daemon [-s|-t|-r|-ts] <daemons>
     If no flag is specified, -s is assumed
       --list         -l   list started daemons
       --available    -a   list all available daemons
@@ -38,7 +38,7 @@ Sometimes you might want to instead of restarting (for whatever reason)
 stop a bunch of services and then start them. In that case you can run
 for example:
 
-    $ **daemon -ts httpd mysqld**
+    $ daemon -ts httpd mysqld
     :: Stopping Apache Web Server                                  [DONE] 
     :: Stopping MySQL Server                                       [DONE] 
     :: Starting Apache Web Server                                  [DONE] 

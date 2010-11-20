@@ -11,7 +11,7 @@ function help () {
     echo "arch-daemon manipulates services (daemons)"
     echo "on Arch Linux: start, stop and restart"
     echo ""
-    echo "Usage: daemon [-s|-t|-r] <daemons>"
+    echo "Usage: daemon [-s|-t|-r|-ts] <daemons>"
     echo "If no flag is specified, -s is assumed"
     echo "  --list         -l   list started daemons"
     echo "  --available    -a   list all available daemons"
