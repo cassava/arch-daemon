@@ -4,7 +4,7 @@ ARCH-DAEMON (SHORT: DAEMON) README
 **(Arch-)Daemon** manipulates services on an Arch Linux system.
 
 Lets say I like to start or stop daemons manually a lot, for example if I never
-use cups or httpd or mysql. Normally I'd have to then do this:
+use `cups` or `httpd` or `mysql`. Normally I'd have to then do this:
 
     sudo /etc/rc.d/cups start
     sudo /etc/rc.d/httpd start
@@ -53,4 +53,3 @@ make an alias for myself:
 
 Then you can save yourself even more typing! ;)
 
-*TODO: this README will be updated and completed in the next few days.*
