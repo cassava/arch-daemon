@@ -21,3 +21,4 @@ build() {
   install -d $pkgdir/usr/bin/
   install -m755 daemon $pkgdir/usr/bin/daemon
 }
+md5sums=('a24e3e54c6f409105c3c9efefe0bf713')
