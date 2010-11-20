@@ -53,3 +53,4 @@ make an alias for myself:
 
 Then you can save yourself even more typing! ;)
 
+*TODO: this README will be updated and completed in the next few days.*
