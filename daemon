@@ -4,14 +4,14 @@
 # Author: Ben Morgan <uv.sound@gmail.com>
 
 function version () {
-    echo "daemon version 1.6 (28th September 2010)"
+    echo "arch-daemon version 1.7 (20. November 2010)"
 }
 
 function help () {
-    echo "daemon manipulates services (daemons)"
+    echo "arch-daemon manipulates services (daemons)"
     echo "on Arch Linux: start, stop and restart"
     echo ""
-    echo "Usage: daemon [-s|-t|-r] <daemon>"
+    echo "Usage: daemon [-s|-t|-r] <daemons>"
     echo "If no flag is specified, -s is assumed"
     echo "  --list         -l   list started daemons"
     echo "  --available    -a   list all available daemons"
@@ -28,12 +28,12 @@ function help () {
 
 function list () {
     echo "Currently running daemons:"
-    ls -1 /var/run/daemons | xargs -I daemon echo "  daemon"
+    /bin/ls -1 /var/run/daemons | xargs -I daemon echo "  daemon"
 }
 
 function available () {
     echo "All available daemons:"
-    ls --color=auto /etc/rc.d
+    /bin/ls --color=never --hide=functions* /etc/rc.d
     #ls -1 /etc/rc.d | xargs -I daemon echo "  daemon"
 }
 
