@@ -18,6 +18,8 @@ It would be nice if we could simplify this, and indeed, this is the niche that
 and all of those services will be started in exactly the same way that we
 did it above.
 
+Arch-Daemon is distributed under the ISC License (see `LICENSE`).
+
 
 ### Usage (taken from `daemon --help`)
     Usage: daemon [-s|-t|-r|-ts] <daemons>
