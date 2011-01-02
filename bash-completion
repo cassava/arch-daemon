@@ -1,21 +1,42 @@
-# Bash completion for arch-daemon
-# This file is in the public domain
+# arch-daemon completion
+#
+#  Author: Andrwe Lord Weber
+#  Mail: lord-weber-andrwe<at>andrwe<dot>org
+#
+which daemon >/dev/null 2>&1 &&
+_arch_daemon()
+{
+  local cur prev initdir daemons short_opts long_opts prog
 
-_daemon() {
-  local cur prev short_opts long_opts daemons
-  COMPREPLY=()
-  cur="${COMP_WORDS[COMP_CWORD]}"
-  prev="${COMP_WORDS[COMP_CWORD-1]}"
-  short_opts=('-l -a -s -t -r -ts -h -v -q')
-  long_opts=('--list --available --start --stop --restart --stop-start --help --version --quit-on-fail')
-  daemons=`/bin/ls --color=never --hide=functions* /etc/rc.d`
+  prog="daemon"
 
-  if [[ ${prev} == 'daemon' ]]; then
-    COMPREPLY=( $(compgen -W "${short_opts} ${long_opts} ${daemons}" -- ${cur}) )
-  elif [[ ${prev} != '-l' ]] && [[ ${prev} != '-a' ]] && [[ ${prev} != '-h' ]] && [[ ${prev} != '-v' ]] && [[ ${prev} != '--available' ]] && [[ ${prev} != '--list' ]] && [[ ${prev} != '--help' ]] && [[ ${prev} != '--version' ]]; then
-    COMPREPLY=( $(compgen -W "${daemons}" -- ${cur}) )
+  short_opts='-l -a -s -t -r -ts -h -v -q'
+  long_opts='--list --available --start --stop --restart --stop-start --help --version --quit-on-fail'
+  
+  _get_comp_words_by_ref cur prev
+  
+  initdir=/etc/rc.d
+  
+  daemons=( $( printf '%s ' $initdir/!(*.pac(orig|new|save)|*functions*) ) )
+  daemons=( ${daemons[@]#$initdir/} )
+  cmd=${COMP_WORDS[@]}
+  cmd=${cmd/* --/}
+  cmd=--${cmd/ */}
+  shcmd=${COMP_WORDS[@]}
+  shcmd=${shcmd/* -/}
+  shcmd=-${shcmd/ */}
+        
+  if [[ ${cmd} =~ (${long_opts// /|}) ]]; then
+    [ "${cmd}" == "--stop-start" ] && cmd=stop
+    COMPREPLY=( $( compgen -W '`grep -El "^.*[uU]sage:[ ]*[^ ]*[ ]*{*|*${cmd/--/}.*$" $initdir/* | sed 's#${initdir}/##'`' -- "$cur" ) )
+  elif [[ "${shcmd}" =~ ^(${short_opts// /|})$ ]]; then
+    COMPREPLY=( $( compgen -W '${daemons[@]}' -- "$cur" ) )
+  else 
+    COMPREPLY=( $( compgen -W '${short_opts} ${long_opts} ${daemons[@]}' -- "$cur" ) )
   fi
+  
+  return 0
+} &&
+complete -F _arch_daemon daemon
 
-}
-
-complete -F _daemon daemon
+# vim: ts=2 sw=2 et filetype=sh
