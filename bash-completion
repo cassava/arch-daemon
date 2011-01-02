@@ -1,0 +1,21 @@
+# Bash completion for arch-daemon
+# This file is in the public domain
+
+_daemon() {
+  local cur prev short_opts long_opts daemons
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  short_opts=('-l -a -s -t -r -ts -h -v -q')
+  long_opts=('--list --available --start --stop --restart --stop-start --help --version --quit-on-fail')
+  daemons=`/bin/ls --color=never --hide=functions* /etc/rc.d`
+
+  if [[ ${prev} == 'daemon' ]]; then
+    COMPREPLY=( $(compgen -W "${short_opts} ${long_opts} ${daemons}" -- ${cur}) )
+  elif [[ ${prev} != '-l' ]] && [[ ${prev} != '-a' ]] && [[ ${prev} != '-h' ]] && [[ ${prev} != '-v' ]] && [[ ${prev} != '--available' ]] && [[ ${prev} != '--list' ]] && [[ ${prev} != '--help' ]] && [[ ${prev} != '--version' ]]; then
+    COMPREPLY=( $(compgen -W "${daemons}" -- ${cur}) )
+  fi
+
+}
+
+complete -F _daemon daemon

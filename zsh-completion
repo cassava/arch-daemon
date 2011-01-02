@@ -1,0 +1,14 @@
+#compdef daemon
+
+_arguments -s \
+    '(-s --start)'{-s,--start}'[start daemons]' \
+    '(-r --restart)'{-r,--restart}'[restart daemons]' \
+    '(-t --stop)'{-t,--stop}'[stop daemons]' \
+    '(-ts --stop-start)'{-ts,--stop-start}'[stop then start daemons]' \
+    '(-l --list)'{-l,--list}'[list running daemons]' \
+    '(-a --available)'{-a,--available}'[list available daemons]' \
+    '(-q --quit-on-fail)'{-q,--quit-on-fail}'[quit on any fail]' \
+    '(-v --version)'{-v,--version}'[display the version]' \
+    '(-h --help)'{-h,--help}'[display the help]'
+
+
