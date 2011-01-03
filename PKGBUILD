@@ -22,3 +22,5 @@ build() {
   install -d ${pkgdir}/usr/share/zsh/site-functions
   install -m644 zsh-completion ${pkgdir}/usr/share/zsh/site-functions/arch-daemon
 }
+md5sums=('335cfe94d81a6192fb562d1e5df2f75f'
+         'd992807f4f980336a941402cca3f6936')
