@@ -6,6 +6,8 @@ ARCH-DAEMON (SHORT: DAEMON) INSTALLATION INSTRUCTIONS
 
 ### Installation
   - Put `daemon` into `/usr/bin/` and you're good
+  - Get the Bash completion support from:
+    http://andrwe.org/doku.php/blog/scripting/bash/arch-daemon-completion
 
 ### Tips
   - Consider making `sudo daemon` without a password, and then make an

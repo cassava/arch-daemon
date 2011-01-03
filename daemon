@@ -2,7 +2,9 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Copyright (c) 2010, Ben Morgan <uv.sound@gmail.com>
+# Version 1.10  (2. January 2011)
+
+# Copyright (c) 2011, Ben Morgan <uv.sound@gmail.com>
 # 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +19,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 function version () {
-    echo "arch-daemon version 1.8 (26. November 2010)"
+    echo "arch-daemon version 1.10 (2. January 2011)"
 }
 
 function help () {
@@ -28,10 +30,11 @@ function help () {
     echo "If no flag is specified, -s is assumed"
     echo "  --list         -l   list started daemons"
     echo "  --available    -a   list all available daemons"
-    echo "  --start        -s   start"
-    echo "  --stop         -t   stop"
-    echo "  --restart      -r   restart"
-    echo "  --stop-start   -ts  stop and then start"
+    echo "  --start        -s   send: start"
+    echo "  --stop         -t   send: stop"
+    echo "  --restart      -r   send: restart"
+    echo "  --reload       -rl  send: reload (e.g. httpd)"
+    echo "  --stop-start   -ts  send: stop and then start"
     echo "  --help         -h   display this help"
     echo "  --version      -v   display the version"
     echo "  --quit-on-fail -q   quit when a services does not exist"
@@ -54,7 +57,7 @@ function run () {
     # basename the service to prevent running other applications
     # (so you can't run a service ../../home/someuser/bad-app.sh)
     service=$(basename $1)  # the service (e.g. cups)
-    cmd=$2       # the command (start, stop, restart)
+    cmd=$2       # the command (start, stop, restart, reload)
     
     if [ ! -f /etc/rc.d/$service ]; then
         echo "daemon '$service' does not exist!"
@@ -110,6 +113,7 @@ if [ $# -gt 0 ]; then
             -s|--start     ) cmd="start";;
             -t|--stop      ) cmd="stop";;
             -r|--restart   ) cmd="restart";;
+           -rl|--reload    ) cmd="reload";;
            -ts|--stop-start) cmd="stopstart";;
             -q|--quit-on-fail) quitonfail=1;;
              *             ) array[$count]=$arg; count=$count+1;;

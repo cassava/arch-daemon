@@ -1,0 +1,11 @@
+CHANGES: ARCH-DAEMON                                             1.10
+=====================================================================
+
+1.10  (3. January 2011)
+  - Support for the `reload` command (e.g. for httpd).
+    Syntax is: -rl or --reload
+  - Add (improved) bash completion support;
+    courtesy of Andrwe Lord Weber <lord-weber-andrwe(at)andrwe(dot)org>.
+    http://andrwe.org/doku.php/blog/scripting/bash/arch-daemon-completion
+    
+

@@ -22,13 +22,14 @@ Arch-Daemon is distributed under the ISC License (see `LICENSE`).
 
 
 ### Usage (taken from `daemon --help`)
-    Usage: daemon [-s|-t|-r|-ts] <daemons>
+    Usage: daemon [-s|-t|-r|-ts|-rl] <daemons>
     If no flag is specified, -s is assumed
       --list         -l   list started daemons
       --available    -a   list all available daemons
       --start        -s   start
       --stop         -t   stop
       --restart      -r   restart
+      --reload       -rl  reload
       --stop-start   -ts  stop and then start
       --help         -h   display this help
       --version      -v   display the version
