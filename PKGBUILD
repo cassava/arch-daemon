@@ -1,13 +1,13 @@
 # Maintainer: Ben Morgan <benm.morgan@gmail.com>
 pkgname=arch-daemon
-pkgver=1.10
+pkgver=2.0
 pkgrel=1
 pkgdesc="Easily manipulate daemons in /etc/rc.d on Arch Linux"
 arch=('any')
 url="https://github.com/cassava/arch-daemon"
 license=('ISC')
-source=(https://github.com/downloads/cassava/$pkgname/$pkgname-$pkgver.tar.gz
-    "http://andrwe.org/doku.php/blog/scripting/bash/arch-daemon-completion?do=export_code&codeblock=0")
+source=("https://github.com/downloads/cassava/$pkgname/$pkgname-$pkgver.tar.gz"
+        "http://andrwe.org/doku.php/blog/scripting/bash/arch-daemon-completion?do=export_code&codeblock=0")
 
 build() {
   cd $srcdir/$pkgname-$pkgver
@@ -22,5 +22,4 @@ build() {
   install -d ${pkgdir}/usr/share/zsh/site-functions
   install -m644 zsh-completion ${pkgdir}/usr/share/zsh/site-functions/arch-daemon
 }
-md5sums=('335cfe94d81a6192fb562d1e5df2f75f'
-         'd992807f4f980336a941402cca3f6936')
+

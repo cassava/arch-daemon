@@ -1,5 +1,25 @@
-CHANGES: ARCH-DAEMON                                             1.10
+CHANGES: ARCH-DAEMON                                              2.0
 =====================================================================
+
+2.0   (3. January 2011)
+  - Rewrote commandline syntax, not backwards compatible.
+    Now it looks like this:
+        daemon [options] [command] <daemons>
+    The commands `start`, `stop`, `restart` and `reload` have the
+    aliases `s`, `t`, `r` and `l`.
+    See daemon --help or README for more information.
+  - Ability to send unknown commands, e.g.
+        daemon setup vboxdrv
+    If the first argument does not exist as a daemon, then it is assumed
+    to be a command. To run a daemon named after one of the aliased commands,
+    such as `start`, first set the comman with the -c argument:
+        daemon -c start start
+  - Check if a daemon supports the given command and warn the user.
+    As of now, will only fail if the -f fail option is given. Some scripts
+    might not tell you what the usage is, in which case daemon will not
+    correctly identify (this is a case of: power to the user!)
+  - Allow listing of available commands for a daemon, e.g.
+        daemon -z cups httpd
 
 1.10  (3. January 2011)
   - Support for the `reload` command (e.g. for httpd).

@@ -4,7 +4,7 @@ ARCH-DAEMON (SHORT: DAEMON) README
 **(Arch-)Daemon** manipulates services on an Arch Linux system.
 
 Lets say I like to start or stop daemons manually a lot, for example if I never
-use `cups` or `httpd` or `mysql`. Normally I'd have to then do this:
+use `cups` or `httpd` or `mysqld`. Normally I'd have to then do this:
 
     sudo /etc/rc.d/cups start
     sudo /etc/rc.d/httpd start
@@ -22,30 +22,53 @@ Arch-Daemon is distributed under the ISC License (see `LICENSE`).
 
 
 ### Usage (taken from `daemon --help`)
-    Usage: daemon [-s|-t|-r|-ts|-rl] <daemons>
-    If no flag is specified, -s is assumed
-      --list         -l   list started daemons
-      --available    -a   list all available daemons
-      --start        -s   start
-      --stop         -t   stop
-      --restart      -r   restart
-      --reload       -rl  reload
-      --stop-start   -ts  stop and then start
-      --help         -h   display this help
-      --version      -v   display the version
-      --quit-on-fail -q   quit when a services does not exist
+
+    Usage: daemon [options] [command] <daemons>
+      --command cmd  -c   send the given command
+      --fail         -f   quit when a service does not exist
                           or when a service quits with an error
+      --list         -l   list started daemons and quit
+      --available    -a   list all available daemons and quit
+      --arguments    -z   list sendable commands to given daemons and quit
+      --help         -h   display this help and quit
+      --version      -v   display the version and quit
 
-### Other Examples
-Sometimes you might want to instead of restarting (for whatever reason)
-stop a bunch of services and then start them. In that case you can run
-for example:
+    Any command may be given; if no command is given,
+    then `start` is assumed. Some commands have aliases:
+      s=start,  t=stop,  r=restart,  l=reload
 
-    $ daemon -ts httpd mysqld
-    :: Stopping Apache Web Server                                  [DONE] 
-    :: Stopping MySQL Server                                       [DONE] 
-    :: Starting Apache Web Server                                  [DONE] 
-    :: Starting MySQL Server                                       [DONE] 
+    If the first argument does not exist in /etc/rc.d as
+    a daemon, then it is assumed to be a command.
+    If a command exists as a daemon in /etc/rc.d, then
+    the command can be send with `-c command`. 
+
+
+### Examples
+Start some daemons (these are all equivalent):
+
+    daemon httpd mysqld
+    daemon s httpd mysqld
+    daemon start httpd mysqld
+
+Restart, stop, reload some daemons:
+
+    daemon r tomcat
+    daemon t cups
+    daemon l httpd
+
+Send a specfic un-aliased command:
+
+    daemon setup vboxdrv
+    daemon -c setup vboxdrv
+
+Get the available commands for some daemons:
+
+    daemon -z cups httpd
+
+Fail if anything goes wrong (daemon does not exist, or a daemon does not
+support the command that is being sent):
+
+    daemon -f reload httpd mysql
 
 
 ### Tips
@@ -54,5 +77,11 @@ make an alias for myself:
 
     alias daemon="sudo daemon"
 
-Then you can save yourself even more typing! ;)
+Daemon will take the basename of a given daemon, which means that running:
+
+    sudo daemon ../../home/baduser/bad-script.sh
+
+will run `/etc/rc.d/bad-script.sh`. So you cannot execute services outside of
+`/etc/rc.d`. This means you can save yourself even more typing by letting
+yourself run `sudo daemon` without a password! ;)
 

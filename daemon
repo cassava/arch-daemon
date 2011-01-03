@@ -2,9 +2,9 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Version 1.10  (2. January 2011)
+# Version 2.0  (3. January 2011)
 
-# Copyright (c) 2011, Ben Morgan <uv.sound@gmail.com>
+# Copyright (c) 2010-2011, Ben Morgan <uv.sound@gmail.com>
 # 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,113 +18,230 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+dir_available='/etc/rc.d'
+dir_running='/var/run/daemons'
+quit_on_fail=false
+
 function version () {
-    echo "arch-daemon version 1.10 (2. January 2011)"
+    echo "arch-daemon version 2.0 (3. January 2011)"
 }
 
 function help () {
-    echo "arch-daemon manipulates services (daemons)"
-    echo "on Arch Linux: start, stop and restart"
-    echo ""
-    echo "Usage: daemon [-s|-t|-r|-ts] <daemons>"
-    echo "If no flag is specified, -s is assumed"
-    echo "  --list         -l   list started daemons"
-    echo "  --available    -a   list all available daemons"
-    echo "  --start        -s   send: start"
-    echo "  --stop         -t   send: stop"
-    echo "  --restart      -r   send: restart"
-    echo "  --reload       -rl  send: reload (e.g. httpd)"
-    echo "  --stop-start   -ts  send: stop and then start"
-    echo "  --help         -h   display this help"
-    echo "  --version      -v   display the version"
-    echo "  --quit-on-fail -q   quit when a services does not exist"
-    echo "                      or when a service quits with an error"
-    echo ""
+    echo 'arch-daemon manipulates services (daemons)'
+    echo 'on Arch Linux: start, stop and restart'
+    echo 
+    echo 'Usage: daemon [options] [command] <daemons>'
+    echo '  --command cmd  -c   send the given command'
+    echo '  --fail         -f   quit when a service does not exist'
+    echo '                      or when a service quits with an error'
+    echo '  --list         -l   list started daemons and quit'
+    echo '  --available    -a   list all available daemons and quit'
+    echo '  --arguments    -z   list sendable commands to given daemons and quit'
+    echo '  --help         -h   display this help and quit'
+    echo '  --version      -v   display the version and quit'
+    echo 
+    echo 'Any command may be given; if no command is given,'
+    echo 'then `start` is assumed. Some commands have aliases:'
+    echo '  s=start,  t=stop,  r=restart,  l=reload'
+    echo 
+    echo 'If the first argument does not exist in /etc/rc.d as'
+    echo 'a daemon, then it is assumed to be a command.'
+    echo 'If a command exists as a daemon in /etc/rc.d, then'
+    echo 'the command can be send with `-c command`.'
+    echo 
 }
 
-function list () {
+# Print currently running daemons
+function print_running () {
     echo "Currently running daemons:"
-    /bin/ls -1 /var/run/daemons | xargs -I daemon echo "  daemon"
+    /bin/ls -1 $dir_running | xargs -I daemon echo "  daemon"
 }
 
-function available () {
+# Print all available daemons
+function print_available () {
     echo "All available daemons:"
-    /bin/ls --color=never --hide=functions* /etc/rc.d
-    #ls -1 /etc/rc.d | xargs -I daemon echo "  daemon"
+    /bin/ls --color=never --hide=functions* $dir_available
 }
 
+# Print available commands for an array of daemons
+function print_arguments () {
+    array=$1  # array of daemons to print info for
+    if [[ ${#array[@]} -lt 2 && -z ${array[0]} ]]; then
+        help
+        exit 2
+    fi
+    echo "Available commands for the daemon(s):"
+    for service in ${array[@]}; do
+        get_daemon_commands $service
+        echo "  $service: ${last_daemon_commands[@]}"
+    done
+}
+
+# Quit on fail
+function fail () {
+    if [ $quit_on_fail == true ]; then
+        echo "failing."
+        exit 2
+    fi
+}
+
+# Check if a daemon is available
+function daemon_available () {
+    test -f $dir_available/$1
+    return $?
+}
+
+# Stores the supported commands of the daemon in the array below
+declare -a last_daemon_commands
+function get_daemon_commands () {
+    cd $dir_available
+    last_daemon_commands=$(grep 'usage: $0 {\(.*\)}' $1 | sed 's/.*{\(.*\)}.*/\1/' | tr '|' ' ')
+    cd - >/dev/null
+}
+
+# Check if a daemon supports a command;
+function daemon_has_command () {
+    get_daemon_commands $1
+    
+    for i in ${last_daemon_commands[@]}; do
+        if [ $i == $2 ]; then
+            return 0
+        fi
+    done
+    
+    return 1
+}
+
+# Check a service if it fulfills the requirements
+# i.e. it exists and supports the command
+function check_service () {
+    service=$1  # the service (e.g. cups)
+    cmd=$2      # the command (e.g. start)
+
+    # check if daemon is available
+    if ! daemon_available $service; then
+        echo "daemon '$service' does not exist!"
+        return 1
+    fi
+    
+    # check if daemon supports given command
+    if ! daemon_has_command $service $cmd; then
+        echo "daemon '$service' does not support the command '$cmd'"
+        echo "        $service supports: ${last_daemon_commands[@]}"
+        return 1
+    fi
+
+    return 0
+}
+
+# Run a service
 function run () {
     # basename the service to prevent running other applications
     # (so you can't run a service ../../home/someuser/bad-app.sh)
     service=$(basename $1)  # the service (e.g. cups)
-    cmd=$2       # the command (start, stop, restart, reload)
+    cmd=$2  # the command (e.g. start, stop, restart, reload)
     
-    if [ ! -f /etc/rc.d/$service ]; then
-        echo "daemon '$service' does not exist!"
-        if [ "$quitonfail" == "1" ]; then
-            exit 2
-        fi
-        return 2
+    # Run the service, if it exists (we'll trust the user on the command)
+    if daemon_available $service; then
+        /etc/rc.d/$service $cmd
     fi
-    
-    # Make sure that we are root
-    if [ "$(id -u)" != "0" ]; then
-	    echo "root access required."
-	    exit 1
-    fi
-
-    /etc/rc.d/$service $cmd
-
-    if [ "$quitonfail" == "1" ]; then
-        if [ "$?" != "0" ]; then
-            exit 2
-        fi
-    fi
+    return $?
 }
 
+# Run all of the services
 function runall () {
     array=$1  # the array of services
     cmd=$2    # the command to be executed
+
+    # Check all the services first
+    status=0
+    for service in ${array[@]}; do
+        check_service $service $cmd
+        status=$(($service + $?))
+    done
+    [ $status -ne 0 ] && fail
+
+    # Make sure that we are root
+    if [ "$(id -u)" != "0" ]; then
+        echo "root access required."
+	    exit 1
+    fi
     
-    if [ "$cmd" == "stopstart" ]; then
-        runall $array "stop";
-        runall $array "start";
-    else
-        for service in ${array[@]}; do
-            run $service $cmd
-        done
-    fi 
+    # Run all the services
+    for service in ${array[@]}; do
+        run $service $cmd
+        [ $? -ne 0 ] && fail
+    done
 }
 
 
-
-# Parse the arguments and compile a command
-quitonfail=0;
-if [ $# -gt 0 ]; then
-    count=0;
-    array=();
-    cmd="start"; # default if no flag specified
-    for arg in $@; do
-        case $arg in
-            -a|--available ) available; exit 0;;
-            -l|--list      ) list; exit 0;;
-            -h|--help      ) help; exit 0;;
-            -v|--version   ) version; exit 0;;
-            -s|--start     ) cmd="start";;
-            -t|--stop      ) cmd="stop";;
-            -r|--restart   ) cmd="restart";;
-           -rl|--reload    ) cmd="reload";;
-           -ts|--stop-start) cmd="stopstart";;
-            -q|--quit-on-fail) quitonfail=1;;
-             *             ) array[$count]=$arg; count=$count+1;;
-        esac
-    done
-    runall $array $cmd
-    exit $?
-else
+# Make sure that we have some arguments
+if [ $# -eq 0 ]; then
     help
     exit 1
 fi
 
-exit 128
+# Parse the arguments and compile a command
+# Default command is "start" if not specified
+declare -a array
+cmd="start"
+count=-1
+print_commands=false
+while [ $# -ne 0 ]; do
+    case $1 in
+        -a|--available )
+            print_available
+            exit 0;;
+        -l|--list )
+            print_running
+            exit 0;;
+        -h|--help )
+            help
+            exit 0;;
+        -v|--version )
+            version
+            exit 0;;
+        -z|--arguments )
+            print_commands=true
+            shift 1;;
+        -f|--fail )
+            quit_on_fail=true
+            shift 1;;
+        -c|--command )
+            cmd=$2
+            if [ $count -eq -1 ]; then
+                count=0
+            fi
+            shift 2;;
+        * )
+            if [ $count -eq -1 ]; then
+                # We have the first non-option, see if it is a command
+                count=0
+                case $1 in
+                    s|start  ) cmd="start";;
+                    t|stop   ) cmd="stop";;
+                    r|restart) cmd="restart";;
+                    l|reload ) cmd="reload";;
+                    * )
+                        if daemon_available $1; then
+                            array[$count]=$1
+                            count=$(($count + 1))
+                        else
+                            cmd=$1
+                        fi
+                esac
+            else
+                array[$count]=$1;
+                count=$(($count + 1))
+            fi
+            shift 1
+    esac
+done
+
+if $print_commands; then
+    print_arguments $array
+else
+    runall $array $cmd
+fi
+exit $?
 
