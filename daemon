@@ -2,7 +2,7 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Version 2.0  (3. January 2011)
+# Version 2.0  (4. January 2011)
 
 # Copyright (c) 2010-2011, Ben Morgan <uv.sound@gmail.com>
 # 
@@ -23,7 +23,7 @@ dir_running='/var/run/daemons'
 quit_on_fail=false
 
 function version () {
-    echo "arch-daemon version 2.0 (3. January 2011)"
+    echo "arch-daemon version 2.0 (4. January 2011)"
 }
 
 function help () {
@@ -102,7 +102,6 @@ function get_daemon_commands () {
 # Check if a daemon supports a command;
 function daemon_has_command () {
     get_daemon_commands $1
-    
     for i in ${last_daemon_commands[@]}; do
         if [ $i == $2 ]; then
             return 0
@@ -157,7 +156,7 @@ function runall () {
     status=0
     for service in ${array[@]}; do
         check_service $service $cmd
-        status=$(($service + $?))
+        status=$(($status + $?))
     done
     [ $status -ne 0 ] && fail
 

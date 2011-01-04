@@ -6,6 +6,7 @@ pkgdesc="Easily manipulate daemons in /etc/rc.d on Arch Linux"
 arch=('any')
 url="https://github.com/cassava/arch-daemon"
 license=('ISC')
+install=('arch-daemon.install')
 source=("https://github.com/downloads/cassava/$pkgname/$pkgname-$pkgver.tar.gz"
         "http://andrwe.org/doku.php/blog/scripting/bash/arch-daemon-completion?do=export_code&codeblock=0")
 
