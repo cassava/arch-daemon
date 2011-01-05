@@ -2,7 +2,7 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Version 2.0  (4. January 2011)
+# Version 2.0b1  (6. January 2011)
 
 # Copyright (c) 2010-2011, Ben Morgan <uv.sound@gmail.com>
 # 
@@ -23,12 +23,12 @@ dir_running='/var/run/daemons'
 quit_on_fail=false
 
 function version () {
-    echo "arch-daemon version 2.0 (4. January 2011)"
+    echo "arch-daemon version 2.0b1 (6. January 2011)"
 }
 
 function help () {
-    echo 'arch-daemon manipulates services (daemons)'
-    echo 'on Arch Linux: start, stop and restart'
+    version
+    echo 'Easily manipulate daemons in /etc/rc.d on Arch Linux.'
     echo 
     echo 'Usage: daemon [options] [command] <daemons>'
     echo '  --command cmd  -c   send the given command'
@@ -46,8 +46,8 @@ function help () {
     echo 
     echo 'If the first argument does not exist in /etc/rc.d as'
     echo 'a daemon, then it is assumed to be a command.'
-    echo 'If a command exists as a daemon in /etc/rc.d, then'
-    echo 'the command can be send with `-c command`.'
+    echo 'If a aliased command exists as a daemon in /etc/rc.d,'
+    echo 'then the command can be send with `-c command`.'
     echo 
 }
 
@@ -91,12 +91,18 @@ function daemon_available () {
     return $?
 }
 
+declare -a all_daemon_commands
+function get_all_daemon_commands () {
+    # Uses globbing to go through all the daemons in /etc/rc.d
+    get_daemon_commands "!(*functions*)"
+    all_daemon_commands=$last_daemon_commands
+}
+
 # Stores the supported commands of the daemon in the array below
 declare -a last_daemon_commands
 function get_daemon_commands () {
-    cd $dir_available
-    last_daemon_commands=$(grep 'usage: $0 {\(.*\)}' $1 | sed 's/.*{\(.*\)}.*/\1/' | tr '|' ' ')
-    cd - >/dev/null
+    # Get all of the possible commands that there are, by going through each case.
+    last_daemon_commands=$(sed '/#.*bash/,/case\s*"*\${*1}*"*\s*in/ { /.*/d };1,$ { /^\s*\(.*\)\s*)\s*$/!d;/^#/d;/(/d;/\*)/d;s/\s//g;s/)//g;s/|/ /g; }' $dir_available/$1 | sort | uniq | tr "\n" " ")
 }
 
 # Check if a daemon supports a command;
