@@ -65,6 +65,10 @@ Get the available commands for some daemons:
 
     daemon -z cups httpd
 
+... for all the daemons:
+
+    daemon -z /etc/rc.d/*
+
 Fail if anything goes wrong (daemon does not exist, or a daemon does not
 support the command that is being sent):
 
