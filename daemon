@@ -2,9 +2,9 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Version 2.0b1  (6. January 2011)
+# Version 2.0  (9. January 2011)
 
-# Copyright (c) 2010-2011, Ben Morgan <uv.sound@gmail.com>
+# Copyright (c) 2010-2011, Ben Morgan <neembi@googlemail.com>
 # 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,12 +18,15 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+# get_daemon_commands() and get_all_daemon_commands()
+# by Andrwe Lord Weber [http://andrwe.org]
+
 dir_available='/etc/rc.d'
 dir_running='/var/run/daemons'
 quit_on_fail=false
 
 function version () {
-    echo "arch-daemon version 2.0b1 (6. January 2011)"
+    echo "arch-daemon version 2.0 (9. January 2011)"
 }
 
 function help () {
@@ -31,12 +34,14 @@ function help () {
     echo 'Easily manipulate daemons in /etc/rc.d on Arch Linux.'
     echo 
     echo 'Usage: daemon [options] [command] <daemons>'
+    echo 'Available options:'
     echo '  --command cmd  -c   send the given command'
     echo '  --fail         -f   quit when a service does not exist'
     echo '                      or when a service quits with an error'
     echo '  --list         -l   list started daemons and quit'
     echo '  --available    -a   list all available daemons and quit'
     echo '  --arguments    -z   list sendable commands to given daemons and quit'
+    echo '                      e.g. daemon -z cups httpd network'
     echo '  --help         -h   display this help and quit'
     echo '  --version      -v   display the version and quit'
     echo 
@@ -60,20 +65,28 @@ function print_running () {
 # Print all available daemons
 function print_available () {
     echo "All available daemons:"
-    /bin/ls --color=never --hide=functions* $dir_available
+    /bin/ls --color=never --hide="*.pac(orig|new|save)|functions*|*functions)" $dir_available
 }
 
 # Print available commands for an array of daemons
 function print_arguments () {
     array=$1  # array of daemons to print info for
-    if [[ ${#array[@]} -lt 2 && -z ${array[0]} ]]; then
+    
+    # check that the array of services is not empty
+    if [ -z ${array[0]} ]; then
         help
         exit 2
     fi
+
     echo "Available commands for the daemon(s):"
     for service in ${array[@]}; do
-        get_daemon_commands $service
-        echo "  $service: ${last_daemon_commands[@]}"
+        # check if daemon is available
+        if ! daemon_available $service; then
+            echo "  daemon '$service' does not exist!" 
+        else
+            get_daemon_commands $service
+            echo "  $service: ${last_daemon_commands[@]}"
+        fi
     done
 }
 
@@ -91,10 +104,11 @@ function daemon_available () {
     return $?
 }
 
+# TODO: figure out what to do with this function :P
 declare -a all_daemon_commands
 function get_all_daemon_commands () {
     # Uses globbing to go through all the daemons in /etc/rc.d
-    get_daemon_commands "!(*functions*)"
+    get_daemon_commands "!(*.pac(orig|new|save)|functions*|*functions)"
     all_daemon_commands=$last_daemon_commands
 }
 
@@ -102,7 +116,7 @@ function get_all_daemon_commands () {
 declare -a last_daemon_commands
 function get_daemon_commands () {
     # Get all of the possible commands that there are, by going through each case.
-    last_daemon_commands=$(sed '/#.*bash/,/case\s*"*\${*1}*"*\s*in/ { /.*/d };1,$ { /^\s*\(.*\)\s*)\s*$/!d;/^#/d;/(/d;/\*)/d;s/\s//g;s/)//g;s/|/ /g; }' $dir_available/$1 | sort | uniq | tr "\n" " ")
+    last_daemon_commands=$(sed '/#.*sh/,/^.*case\s*"*\${*1}*"*.*/ { /^.*case\s*"*\${*1}*"*.*/!d };s/^.*case\s*"*\${*1}*"*.*/;;/g;/;;/,/^\s*.*)\s*$/ !d;/^\s*.*)\s*$/ !d;/\*/d;/;;/d;s/\s*//g;s/)//g;s/|/ /g' $dir_available/$1 | LANG=C sort | uniq | tr '\n' ' ')
 }
 
 # Check if a daemon supports a command;
@@ -125,14 +139,14 @@ function check_service () {
 
     # check if daemon is available
     if ! daemon_available $service; then
-        echo "daemon '$service' does not exist!"
+        echo "daemon '$service' does not exist!" 
         return 1
     fi
     
     # check if daemon supports given command
     if ! daemon_has_command $service $cmd; then
-        echo "daemon '$service' does not support the command '$cmd'"
-        echo "        $service supports: ${last_daemon_commands[@]}"
+        echo "daemon '$service' does not support the command '$cmd'" 
+        echo "        $service supports: ${last_daemon_commands[@]}" 
         return 1
     fi
 
@@ -141,10 +155,8 @@ function check_service () {
 
 # Run a service
 function run () {
-    # basename the service to prevent running other applications
-    # (so you can't run a service ../../home/someuser/bad-app.sh)
-    service=$(basename $1)  # the service (e.g. cups)
-    cmd=$2  # the command (e.g. start, stop, restart, reload)
+    service=$1  # the service (e.g. cups)
+    cmd=$2      # the command (e.g. start, stop, restart, reload)
     
     # Run the service, if it exists (we'll trust the user on the command)
     if daemon_available $service; then
@@ -168,7 +180,7 @@ function runall () {
 
     # Make sure that we are root
     if [ "$(id -u)" != "0" ]; then
-        echo "root access required."
+        echo "root access required." 
 	    exit 1
     fi
     
@@ -229,14 +241,16 @@ while [ $# -ne 0 ]; do
                     l|reload ) cmd="reload";;
                     * )
                         if daemon_available $1; then
-                            array[$count]=$1
+                            array[$count]=$(basename $1)
                             count=$(($count + 1))
                         else
                             cmd=$1
                         fi
                 esac
             else
-                array[$count]=$1;
+                # basename the service to prevent running other applications
+                # (so you can't run a service ../../home/someuser/bad-app.sh)
+                array[$count]=$(basename $1);
                 count=$(($count + 1))
             fi
             shift 1

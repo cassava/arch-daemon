@@ -1,0 +1,101 @@
+# arch-daemon completion
+#
+#  Author: Andrwe Lord Weber
+#  Mail: lord-weber-andrwe<at>andrwe<dot>org
+#
+which daemon >/dev/null 2>&1 &&
+_arch_daemon()
+{
+	local cur prev initdir daemons short_opts short_param_opts long_opts cmds shoptExtglob CMD FAIL ARGS
+
+	short_opts='-l -a -h -v'
+	short_param_opts='-c -f -z'
+	long_opts='--list --available --fail --command --arguments --help --version'
+
+	_get_comp_words_by_ref cur prev
+
+	shoptExtglob="$(shopt -p | grep extglob)"
+	shopt -s extglob
+
+	initdir=/etc/rc.d
+
+	cmds="$(sed '/#.*sh/,/^.*case\s*"*\${*1}*"*.*/ { /^.*case\s*"*\${*1}*"*.*/!d };s/^.*case\s*"*\${*1}*"*.*/;;/g;/;;/,/^\s*.*)\s*$/ !d;/^\s*.*)\s*$/ !d;/\*/d;/;;/d;s/\s*//g;s/)//g;s/|/ /g' ${initdir}/!(*functions*) | LANG=C sort | uniq | tr '\n' ' ')"
+	daemons=( $( printf '%s ' ${initdir}/!(*.pac(orig|new|save)|functions*|*functions) ) )
+	daemons=( ${daemons[@]#${initdir}/} )
+	CMD=false
+	FAIL=false
+	ARGS=false
+	cmd=""
+
+	if [[ ${COMP_WORDS[@]} =~ (-c|--command) ]]; then
+		CMD=true
+	fi
+	if [[ ${COMP_WORDS[@]} =~ (-f|--fail) ]]; then
+		FAIL=true
+	fi
+	if [[ ${COMP_WORDS[@]} =~ (-z|--arguments) ]]; then
+		ARGS=true
+	fi
+
+	if ${CMD} && ${FAIL}; then
+		cmd="${COMP_WORDS[3]}"
+	elif ${CMD} || ${FAIL}; then
+		cmd="${COMP_WORDS[2]}"
+	else
+		cmd="${COMP_WORDS[1]}"
+	fi
+
+	case "${cur}" in
+		"-")
+			COMPREPLY=( $( compgen -W '${short_opts} ${short_param_opts} ${long_opts}' -- "$cur" ) )
+			${shoptExtglob}
+			return 0
+			;;
+		--*)
+			COMPREPLY=( $( compgen -W '${long_opts}' -- "$cur" ) )
+			${shoptExtglob}
+			return 0
+			;;
+	esac
+
+	if ${ARGS};then
+		COMPREPLY=( $( compgen -W '${daemons[@]}' -- "$cur" ) )
+	elif [ -z "${cmd}" ] && ${CMD}; then
+		COMPREPLY=( $( compgen -W '${cmds}' -- "$cur" ) )
+	elif [ -z "${cmd}" ] && ${FAIL}; then
+		COMPREPLY=( $( compgen -W '-c --command ${cmds}' -- "$cur" ) )
+	elif [[ "${cmd}" =~ ^(${cmds// /|}s|t|r|l)$ ]]; then
+		COMPREPLY=( )
+		case "${cmd}" in
+			s)
+				cmd="start"
+				COMPREPLY=( $( compgen -W '${cmd}' -- "$cur" ) )
+				;;
+			t)
+				cmd="stop"
+				COMPREPLY=( $( compgen -W '${cmd}' -- "$cur" ) )
+				;;
+			r)
+				cmd="restart"
+				COMPREPLY=( $( compgen -W '${cmd}' -- "$cur" ) )
+				;;
+			l)
+				cmd="reload"
+				COMPREPLY=( $( compgen -W '${cmd}' -- "$cur" ) )
+				;;
+		esac
+		COMPREPLY+=( $( compgen -W '`grep -El "^[ ]*[^ ]*${cmd}[|\)][^ ]*\)*[ ]*$" ${initdir}/* | sed 's#${initdir}/##'`' -- "$cur" ) )
+	elif [[ "${cmd}" =~ ^(${short_opts// /|})$ ]]; then
+			COMPREPLY=( )
+	elif [ -n "${cmd}" ]; then
+		COMPREPLY=( $( compgen -W '${cmds}' -- "$cur" ) )
+	else 
+		COMPREPLY=( $( compgen -W '${short_opts} ${short_param_opts} ${long_opts} ${cmds}' -- "$cur" ) )
+	fi
+
+	${shoptExtglob}
+	return 0
+} &&
+complete -F _arch_daemon daemon
+
+# vim: ts=2 sw=2 et filetype=sh
