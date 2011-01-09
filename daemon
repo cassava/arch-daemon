@@ -2,7 +2,7 @@
 # File: daemon
 # This script manipulates daemons in /etc/rc.d on Arch Linux systems.
 
-# Version 2.0  (8. January 2011)
+# Version 2.0  (9. January 2011)
 
 # Copyright (c) 2010-2011, Ben Morgan <neembi@googlemail.com>
 # 
@@ -26,7 +26,7 @@ dir_running='/var/run/daemons'
 quit_on_fail=false
 
 function version () {
-    echo "arch-daemon version 2.0 (8. January 2011)"
+    echo "arch-daemon version 2.0 (9. January 2011)"
 }
 
 function help () {
@@ -34,12 +34,14 @@ function help () {
     echo 'Easily manipulate daemons in /etc/rc.d on Arch Linux.'
     echo 
     echo 'Usage: daemon [options] [command] <daemons>'
+    echo 'Available options:'
     echo '  --command cmd  -c   send the given command'
     echo '  --fail         -f   quit when a service does not exist'
     echo '                      or when a service quits with an error'
     echo '  --list         -l   list started daemons and quit'
     echo '  --available    -a   list all available daemons and quit'
     echo '  --arguments    -z   list sendable commands to given daemons and quit'
+    echo '                      e.g. daemon -z cups httpd network'
     echo '  --help         -h   display this help and quit'
     echo '  --version      -v   display the version and quit'
     echo 
@@ -63,7 +65,7 @@ function print_running () {
 # Print all available daemons
 function print_available () {
     echo "All available daemons:"
-    /bin/ls --color=never --hide=functions* $dir_available
+    /bin/ls --color=never --hide="*.pac(orig|new|save)|functions*|*functions)" $dir_available
 }
 
 # Print available commands for an array of daemons

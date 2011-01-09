@@ -16,6 +16,7 @@ build() {
   
   # install bash completion
   install -d ${pkgdir}/etc/bash_completion.d/
-  install -m644 ${srcdir}/arch-daemon.bash-completion ${pkgdir}/etc/bash_completion.d/arch-daemon
+  install -m644 arch-daemon.bash-completion ${pkgdir}/etc/bash_completion.d/arch-daemon
 }
 
+md5sums=('27287118ae380459fc9e1fab78027e40')
